@@ -34,7 +34,7 @@ int u_intractn(int n_);
 vector< vector<int> > hamiltonian(const int, const float);
 
 // initializing constants
-constexpr int N = 4;
+constexpr int N = 2;
 constexpr float S = 0.5;
 constexpr int N_s = 2*S + 1;
 constexpr int np = N*N_s; // binary size NxN_s bit (or # of max. particles can be on lattice)
@@ -86,7 +86,7 @@ int main() {
     es.compute(matA, true);
     MatrixXcd e_val = es.eigenvalues();
     MatrixXcd e_vec = es.eigenvectors();
-    cout << "Eigenvalues:\n" << e_val << "\nEigenvectors:\n" << e_vec << endl;
+    data << "Eigenvalues:\n" << e_val << "\nEigenvectors:\n" << e_vec << endl;
     data.close();
     return 0;
 }
@@ -105,11 +105,8 @@ int nCr(int n, int r) {     // calculate nCr = fact(n)/(fact(r)*fact(n-r))
     return fact(n) / (fact(r) * fact(n - r));
 }
 
-int fact(int n) {
-    long int res = 1;
-    for (int i = 2; i <= n; i++)
-        res = res * i;
-    return res;
+int fact(int n) { // calculate factorial of any positive integer
+    return (n==1 || n==0) ? 1: n * fact(n - 1);
 }
 
 int randInRange(int min, int max) {     // generates random number (double) in range(min, max)

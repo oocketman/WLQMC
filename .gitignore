@@ -1,0 +1,11 @@
+
+*.out
+*.pbxproj
+*.xcsettings
+*.xcsettings
+*.xcscheme
+*.xcbkptlist
+*.plist
+*.txt
+*.xlsx
+*.zip
