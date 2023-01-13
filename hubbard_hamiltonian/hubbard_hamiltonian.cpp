@@ -5,7 +5,7 @@
 //  Created by Hiren Thummar on 8/7/19.
 //  Copyright © 2019 Hiren Thummar. All rights reserved.
 //  Exact Diagonalization for HH
-//  g++ -I /usr/local/include/eigen3/ hubbard_hamiltonian.cpp
+//  g++ -I /usr/local/include/eigen3/ hubbard_hamiltonian.cpp -o hubbard_hamiltonian
 //
 
 #include <string>
@@ -29,15 +29,15 @@ void Initialize();
 int nCr(int, int);
 long fact(long);
 int randInRange(int min, int max);
-vector<int> t_hop(int n_);
-int u_intractn(int n_);
-vector< vector<int> > hamiltonian(const int, const float);
+vector<int> t_hop(int n_, const int np_);
+int u_intractn(int n_, const int np_);
+// vector< vector<int> > hamiltonian(const int, const float);
 
 // initializing constants
-constexpr int N = 2;
-constexpr float S = 1.5;
-constexpr int N_s = 2*S + 1;
-constexpr int np = N*N_s; // binary size NxN_s bit (or # of max. particles can be on lattice)
+const int N = 2;
+const float S = 1.5;
+const int N_s = 2*S + 1;
+const int np = N*N_s; // binary size NxN_s bit (or # of max. particles can be on lattice)
 
 int nstate;
 int res;
@@ -66,11 +66,11 @@ int main() {
     vector<int> ht;
     for (int i = 1; i < nstate; ++i) {
         ht.clear();
-        ht = t_hop(i);
+        ht = t_hop(i, np);
         for (int j = 0; j < ht.size(); ++j) {
             H[i][ht[j]] += -t;
         }
-        H[i][i] += u_intractn(i)*U;
+        H[i][i] += u_intractn(i, np)*U;
     }
 
     int temp = nstate;
@@ -113,12 +113,12 @@ int randInRange(int min, int max) {     // generates random number (double) in r
     return (int) (rand()%max + min);
 }
 
-vector<int> t_hop(int n_) {
+vector<int> t_hop(int n_, int np_) {
     Initialize();
     vector<int> temp;
     vector<int> hop;
     int count;
-    bitset<np> foo(n_);
+    bitset<np_> foo(n_);
     foo.to_string();
     for (int i = 0; i < N_s; ++i) {
         temp.clear();
@@ -128,7 +128,7 @@ vector<int> t_hop(int n_) {
             count += int(foo.test(i+j*N_s));
         }
         if (count > 0 && count < N) {
-            bitset<np> state_(foo);
+            bitset<np_> state_(foo);
             vector<int> temp_(temp);
             sort(temp.begin(),temp.end());
             do {
@@ -144,11 +144,11 @@ vector<int> t_hop(int n_) {
     return hop;
 }
 
-int u_intractn(int n_) {
+int u_intractn(int n_, int np_) {
     Initialize();
     int count;
     int U_s = 0;
-    bitset<np> foo(n_);
+    bitset<np_> foo(n_);
     foo.to_string();
     for (int i = 0; i < N; ++i) {
         count = 0;
