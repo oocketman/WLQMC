@@ -27,7 +27,7 @@ using namespace Eigen;
 
 void Initialize();
 int nCr(int, int);
-int fact(int);
+long fact(long);
 int randInRange(int min, int max);
 vector<int> t_hop(int n_);
 int u_intractn(int n_);
@@ -35,7 +35,7 @@ vector< vector<int> > hamiltonian(const int, const float);
 
 // initializing constants
 constexpr int N = 2;
-constexpr float S = 0.5;
+constexpr float S = 1.5;
 constexpr int N_s = 2*S + 1;
 constexpr int np = N*N_s; // binary size NxN_s bit (or # of max. particles can be on lattice)
 
@@ -49,17 +49,17 @@ int main() {
     srand((unsigned int) time(NULL));
     Initialize();
 
-    ofstream data("hh_eigen_val_vec.txt");
-    data << "Hubbard Hamiltonian Exact Diagonalization for 1-Dimensional SU(N)\n"
-    << "-----------------------------------------------------------------" << endl;
+//    ofstream data("hh_eigen_val_vec.txt"); // change cout to data 177013
+    cout << "Hubbard Hamiltonian Exact Diagonalization for 1-Dimensional SU(N)\n"
+    << "-----------------------------------------------------------------" << endl; // 177013
     // set simulation parameters
-    data << "# of spatial sites N = " << N
+    cout << "# of spatial sites N = " << N
     << "\nSpin S = " << S
     << "\n# of spin flavors N_s = " << N_s
     << "\n# of possible states nstate = " << nstate
     << "\nlength of binary string = " << np
     << "\nHopping strength t = " << (t = 1.0)
-    << "\nOn-site Interaction strength U = " << (U = 8.0) << endl;
+    << "\nOn-site Interaction strength U = " << (U = 8.0) << endl; // 177013
     
     // hamiltonian
     vector< vector<double> > H(nstate, vector<double>(nstate, 0.0));
@@ -86,8 +86,8 @@ int main() {
     es.compute(matA, true);
     MatrixXcd e_val = es.eigenvalues();
     MatrixXcd e_vec = es.eigenvectors();
-    data << "Eigenvalues:\n" << e_val << "\nEigenvectors:\n" << e_vec << endl;
-    data.close();
+    cout << "Eigenvalues:\n" << e_val << "\nEigenvectors:\n" << e_vec << endl; // 177013
+//    data.close(); // 177013
     return 0;
 }
 

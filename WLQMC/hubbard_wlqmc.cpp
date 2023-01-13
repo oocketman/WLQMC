@@ -201,7 +201,7 @@ int main() {            //int main(int argc, const char * argv[])
 //                            cout << "Itime: " << i << " Site: " << j << " spin: " << spin << endl;
 //                            cout << "Step accepted! Right" << endl;
                             rcount += 1;
-//                            printmatpart (occ, spin);
+//                            printmatpart (occ, spin);s
                             // calculate change in energy due to on-site interaction
                             if (nocc[i*N+j] >= 2) {
                                 dE += U*(nocc[i*N+j] - 1);
