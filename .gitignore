@@ -9,3 +9,5 @@
 *.txt
 *.xlsx
 *.zip
+.vscode
+*.dSYM
