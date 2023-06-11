@@ -113,11 +113,13 @@ int randInRange(int min, int max) {     // generates random number (double) in r
     return (int) (rand()%max + min);
 }
 
+// change binary bitset with vectors of 0s and 1s
 vector<int> t_hop(int n_, int np_) {
     Initialize();
     vector<int> temp;
     vector<int> hop;
     int count;
+    // replace following line with something equivalent
     bitset<np_> foo(n_);
     foo.to_string();
     for (int i = 0; i < N_s; ++i) {
