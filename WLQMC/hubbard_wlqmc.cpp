@@ -40,7 +40,7 @@ int MC_steps;       // # of monte carlo steps
 float t;            // hopping strength
 float U;            // onsite interaction strength
 
-float dE;
+float dE = 0.0;
 
 int main() {            //int main(int argc, const char * argv[])
     auto start = chrono::steady_clock::now();
@@ -55,7 +55,7 @@ int main() {            //int main(int argc, const char * argv[])
     // set simulation parameters
     cout << "Spin S = " << (S = 0.5)
     << "\n# of spatial sites N = " << (N = 10)
-    << "\nHopping strength t = " << (t = 1.0)
+    << "\nHopping strength t = " << (t = 2.0)
     << "\nOnsite Interaction strength U = " << (U = 2.0)
     << "\nImaginary time step Delta_tau = " << (Delta_tau = 0.05) //0.25
     << "\nNumber of Monte Carlo steps = " << (MC_steps = 50000)
@@ -83,15 +83,7 @@ int main() {            //int main(int argc, const char * argv[])
             }}}
     
     E.push_back(dE);
-    cout << E.back() << endl;
-//    // print particle density vector
-//    for (int j = 0; j < N; ++j) {
-//        for (int i = 0; i < 2 * L; ++i) {
-//            cout << nocc[i*N + j];
-//        }
-//        cout << "\n";
-//    }
-    
+    cout << "Total initial Energy E = " << E.back()/(2*L*N) << " per site" << endl;
     
     ofstream data("MC.txt"); //, N, S);)
     
@@ -100,7 +92,7 @@ int main() {            //int main(int argc, const char * argv[])
     // print whole tensor to file
     for (int k = 0; k < N_s; ++k) {
 //        data << "N_s: " << k << endl;
-        for (int i = 0; i < 2 * L; --i) {
+        for (int i = 2 * L - 1; i >= 0; --i) {
             for (int j = 0; j < N; ++j) {
                 data << get_elem(occ, i, j, k) << " ";
             }
@@ -113,7 +105,7 @@ int main() {            //int main(int argc, const char * argv[])
     int rcount = 0;
     
     for (int step = 0; step < MC_steps; ++step) {       // loops over monte carlo steps
-        dE = 0;
+        dE = 0.0;
         for (int spin = 0; spin < N_s; ++spin) {        // loop over spin states
             for (int j = 0; j < N; ++j) {               // loop over spatial site
                 for (int i = 0; i < 2*L; ++i) {         // loop over imaginary time steps
@@ -135,14 +127,24 @@ int main() {            //int main(int argc, const char * argv[])
                         random = ((double) rand() / (RAND_MAX));
                         if (random < hb) {
 //                            cout << "R: " << R << " " << "hb: " << hb << " " << "rand: " << random << endl;
+                            size_t index1 = i*N+j;
+                            size_t index2 = ((i+1)%(2*L))*N+j;
+                            size_t index3 = i*N+(j+1)%N;
+                            size_t index4 = ((i+1)%(2*L))*N+(j+1)%N;
+                            if (index1 >= nocc.size() || index2 >= nocc.size() || index3 >= nocc.size() || index4 >= nocc.size()) {
+                                cout << "Error: index out of bounds" << endl;
+                                cout << "Indices: " << index1 << ", " << index2 << ", " << index3 << ", " << index4 << " Size: " << nocc.size() << endl;
+                                exit(1);
+                            }
+                            cout << "set_elem called with i = " << i << ", j = " << j << ", spin = " << spin << endl;
                             set_elem(occ, i, j, spin) = 0;
                             set_elem(occ, (i+1)%(2*L), j, spin) = 0;
                             set_elem(occ, i, (j+1)%N, spin) = 1;
                             set_elem(occ, (i+1)%(2*L), (j+1)%N, spin) = 1;
-                            nocc[i*N+j] += -1;
-                            nocc[((i+1)%(2*L))*N+j] += -1;
-                            nocc[i*N+(j+1)%N] += 1;
-                            nocc[((i+1)%(2*L))*N+(j+1)%N] += 1;
+                            nocc[index1] += -1;
+                            nocc[index2] += -1;
+                            nocc[index3] += 1;
+                            nocc[index4] += 1;
 //                            cout << "Itime: " << i << " Site: " << j << " spin: " << spin << endl;
 //                            cout << "Step accepted! Left" << endl;
                             lcount += 1;
@@ -165,12 +167,10 @@ int main() {            //int main(int argc, const char * argv[])
                             w = get_elem(occ, (i+2)%(2*L), j, spin) + get_elem(occ, ((2*L) + ((i-1)%(2*L)))%(2*L), j, spin) - get_elem(occ, ((2*L) + ((i-1)%(2*L)))%(2*L), (j+1)%N, spin) - get_elem(occ, (i+2)%(2*L), (j+1)%N, spin);
                             m = get_elem(occ, i, (N+((j-1)%N))%N, spin) + 2* get_elem(occ, i, (j+1)%N, spin);
                             
-                            
-                           
-                            
-                            
-                            
-                            
+                            // calculate the total change in energy
+                            dE += -t * (w - m);
+
+
                         }}
                     
                     else if ((get_elem(occ, i, j, spin) == 1 && get_elem(occ, (i+1)%(2*L), j, spin) == 1) && ((j % 2 == 1 && i % 2 == 1) || (j % 2 == 0 && i % 2 == 0)) && (get_elem(occ, i, (N + ((j-1)%N))%N, spin) == 0 && get_elem(occ, (i+1)%(2*L), (N + ((j-1)%N))%N, spin) == 0)) { // (odd space, odd time) or (even space, even time) World line moves R -> L
@@ -190,14 +190,24 @@ int main() {            //int main(int argc, const char * argv[])
                         random = ((double) rand() / (RAND_MAX));
                         if (random < hb) {
 //                            cout << "R: " << R << " " << "hb: " << hb << " " << "rand: " << random << endl;
+                            size_t index1 = i*N+j;
+                            size_t index2 = ((i+1)%(2*L))*N+j;
+                            size_t index3 = i*N+(N+((j-1)%N))%N;
+                            size_t index4 = ((i+1)%(2*L))*N+(N+((j-1)%N))%N;
+                            cout << "set_elem called with i = " << i << ", j = " << j << ", spin = " << spin << endl;
+                            if (index1 >= nocc.size() || index2 >= nocc.size() || index3 >= nocc.size() || index4 >= nocc.size()) {
+                                cout << "Error: index out of bounds" << endl;
+                                cout << "Indices: " << index1 << ", " << index2 << ", " << index3 << ", " << index4 << " Size: " << nocc.size() << endl;
+                                exit(1);
+                            }
                             set_elem(occ, i, j, spin) = 0;
                             set_elem(occ, (i+1)%(2*L), j, spin) = 0;
                             set_elem(occ, i, (N + ((j-1)%N))%N, spin) = 1;
                             set_elem(occ, (i+1)%(2*L), (N + ((j-1)%N))%N, spin) = 1;
-                            nocc[i*N+j] += -1;
-                            nocc[((i+1)%(2*L))*N+j] += -1;
-                            nocc[i*N+(N+((j-1)%N))%N] += 1;
-                            nocc[((i+1)%(2*L))*N+(N+((j-1)%N))%N] += 1;
+                            nocc[index1] += -1;
+                            nocc[index2] += -1;
+                            nocc[index3] += 1;
+                            nocc[index4] += 1;
 //                            cout << "Itime: " << i << " Site: " << j << " spin: " << spin << endl;
 //                            cout << "Step accepted! Right" << endl;
                             rcount += 1;
@@ -220,15 +230,21 @@ int main() {            //int main(int argc, const char * argv[])
                             w = get_elem(occ, (i+2)%(2*L), j, spin) + get_elem(occ, ((2*L) + ((i-1)%(2*L)))%(2*L), j, spin) - get_elem(occ, ((2*L) + ((i-1)%(2*L)))%(2*L), (j+1)%N, spin) - get_elem(occ, (i+2)%(2*L), (j+1)%N, spin);
                             m = get_elem(occ, i, (N+((j-1)%N))%N, spin) + 2* get_elem(occ, i, (j+1)%N, spin);
                             
-                            
-                            
+                            // calculate the total change in energy
+                            dE += -t * (w - m);
                             
                             
                         }}
 
                 }}}
-        // print whole tensor on screen
-//        cout << "MC_step: " << step << endl;
+        E.push_back(E.back() + dE);
+        // print energy to screen only if it's not zero
+        if (dE != 0) { // TODO: change in energy is returned zero for some reason <DEBUG>
+            cout << "MC_step: " << step << endl;
+            cout << "Change in Energy: " << dE << endl;
+            cout << "Total Energy: " << E.back() << endl;
+        }
+        // cout << "Change in Energy: " << dE << endl;
         for (int k = 0; k < N_s; ++k) {
 //            data << "N_s: " << k << endl;
             for (int j = 0; j < N; ++j) {
@@ -243,13 +259,13 @@ int main() {            //int main(int argc, const char * argv[])
     data.close();
     
     cout << "lcount: " << lcount << " " << "rcount: " << rcount << endl;
-    cout << "Energy: " << E.back()/(2*L*N) << endl;
+    cout << "Energy at the end of simulation: " << E.back()/(2*L*N) << " per site" << endl;
  
     auto end = chrono::steady_clock::now();
     chrono::duration<double> diff = end - start;
     cout << "Time: " << diff.count() << '\n';
     
-        // print particle density vector
+    // print particle density vector
     for (int j = 0; j < N; ++j) {
         for (int i = 0; i < 2 * L; ++i) {
             cout << nocc[i*N + j];
@@ -273,7 +289,15 @@ inline int& set_elem(vector<int> &m_, size_t i_, size_t j_, size_t k_) {
 }
 
 inline const int& get_elem(const vector<int> &m_, size_t i_, size_t j_, size_t k_) {
-    return m_[i_*N*N_s + j_*N_s + k_];
+    size_t index = i_*N*N_s + j_*N_s + k_;
+    if (index >= m_.size()) {
+        cout << "Error: index out of bounds" << endl;
+        cout << "Index: " << index << " Size: " << m_.size() << endl;
+        cout << "i_: " << i_ << " j_: " << j_ << " k_: " << k_ << endl;
+        // handle the error, e.g. by exiting the program
+        exit(1);
+    }
+    return m_[index];
 }
 
 // generates random number (double) in range(min, max)
